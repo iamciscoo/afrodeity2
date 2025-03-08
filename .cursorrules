@@ -1,0 +1,136 @@
+# Cursor Rules
+
+## Instructions
+
+- Record fixes for mistakes or corrections to avoid repetition in the `Lessons` section.
+- Organize thoughts and plan steps before starting a task in the `Scratchpad` section.
+- Clear old tasks if necessary.
+- Use todo markers for progress tracking:
+  - `[X]` Completed tasks
+  - `[ ]` Pending tasks
+- Update Scratchpad after completing subtasks.
+- Reflect and plan after milestones for better task management.
+- Always refer to Scratchpad before planning the next step.
+
+## Lessons
+
+
+## Scratchpad
+
+# E-commerce Website Development Plan
+
+### 1. Project Setup and Configuration
+- [ ] Initialize Next.js 15 project with TypeScript
+- [ ] Set up project structure and folders:
+  - `/app` - App router
+  - `/components` - Reusable components
+  - `/lib` - Utility functions
+  - `/hooks` - Custom hooks
+  - `/types` - TypeScript types/interfaces
+  - `/store` - Zustand store
+  - `/prisma` - Database schema
+  - `/public` - Static assets
+- [ ] Configure ESLint and Prettier
+- [ ] Install and configure dependencies:
+  - UI: shadcn-ui, lucide-react
+  - State: zustand
+  - Forms: react-hook-form, zod
+  - Email: resend
+  - File Upload: uploadthing
+  - Database: prisma, postgresql
+  - Auth: next-auth@beta
+  - Payment: stripe
+  - Charts: recharts
+
+### 2. Database and Authentication Setup
+- [ ] Set up PostgreSQL database
+- [ ] Configure Prisma schema:
+  - User model
+  - Product model
+  - Category model
+  - Order model
+  - Review model
+  - Cart model
+- [ ] Implement NextAuth.js authentication:
+  - Email/Password
+  - OAuth providers (Google, GitHub)
+  - JWT handling
+  - Protected routes
+
+### 3. Core Features Implementation
+- [ ] Create layouts:
+  - Main layout
+  - Admin dashboard layout
+- [ ] Build UI components:
+  - Navigation
+  - Product cards
+  - Category filters
+  - Search bar
+  - Shopping cart
+  - Checkout form
+- [ ] Implement product features:
+  - Product listing
+  - Product details
+  - Search and filtering
+  - Categories management
+  - Reviews and ratings
+- [ ] Shopping cart functionality:
+  - Add/remove items
+  - Update quantities
+  - Save for later
+  - Cart persistence
+- [ ] Checkout process:
+  - Address management
+  - Payment integration
+  - Order confirmation
+  - Email notifications
+
+### 4. Admin Dashboard
+- [ ] Create admin interface:
+  - Dashboard overview
+  - Analytics charts
+  - Sales reports
+- [ ] Product management:
+  - CRUD operations
+  - Bulk actions
+  - Image uploads
+- [ ] Order management:
+  - Order processing
+  - Status updates
+  - Return handling
+- [ ] User management:
+  - Customer profiles
+  - Admin roles
+  - Permissions
+
+### 5. Advanced Features
+- [ ] Implement analytics:
+  - Sales metrics
+  - User behavior
+  - Product performance
+- [ ] Add optimization features:
+  - Image optimization
+  - Caching strategies
+  - API route handlers
+- [ ] Implement search:
+  - Full-text search
+  - Filters
+  - Sort options
+
+### 6. Testing and Deployment
+- [ ] Write tests:
+  - Unit tests
+  - Integration tests
+  - E2E tests
+- [ ] Security measures:
+  - Input validation
+  - Rate limiting
+  - CSRF protection
+- [ ] Performance optimization:
+  - Lighthouse audit
+  - Core Web Vitals
+  - SEO optimization
+- [ ] Deployment setup:
+  - Environment variables
+  - Build configuration
+  - CI/CD pipeline
