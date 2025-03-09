@@ -5,6 +5,7 @@ import { Product, Category } from "@prisma/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
+import { useCart } from "@/store/use-cart"
 
 interface ProductInfoProps {
   product: Product & {
@@ -20,6 +21,7 @@ export function ProductInfo({
   reviewCount,
 }: ProductInfoProps) {
   const [quantity, setQuantity] = React.useState(1)
+  const addItem = useCart(state => state.addItem)
 
   function onQuantityChange(e: React.ChangeEvent<HTMLInputElement>) {
     const value = parseInt(e.target.value)
@@ -28,9 +30,9 @@ export function ProductInfo({
     }
   }
 
-  async function addToCart() {
+  function addToCart() {
     try {
-      // TODO: Implement add to cart functionality
+      addItem(product, quantity)
       toast.success(`Added ${quantity} ${quantity === 1 ? 'item' : 'items'} to cart`)
     } catch (error) {
       toast.error("Failed to add to cart. Please try again.")

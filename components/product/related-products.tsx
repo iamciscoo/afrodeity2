@@ -4,6 +4,8 @@ import Image from "next/image"
 import Link from "next/link"
 import { Product, Category } from "@prisma/client"
 import { Button } from "@/components/ui/button"
+import { useCart } from "@/store/use-cart"
+import { toast } from "sonner"
 
 interface RelatedProductsProps {
   products: (Product & {
@@ -12,7 +14,18 @@ interface RelatedProductsProps {
 }
 
 export function RelatedProducts({ products }: RelatedProductsProps) {
+  const addItem = useCart(state => state.addItem)
+
   if (products.length === 0) return null
+
+  function addToCart(product: Product & { category: Category }) {
+    try {
+      addItem(product, 1)
+      toast.success("Added 1 item to cart")
+    } catch (error) {
+      toast.error("Failed to add to cart. Please try again.")
+    }
+  }
 
   return (
     <div className="mt-12">
@@ -37,7 +50,14 @@ export function RelatedProducts({ products }: RelatedProductsProps) {
               <p className="mt-1 text-sm text-muted-foreground">{product.category.name}</p>
               <div className="mt-2 flex items-center justify-between">
                 <span className="text-lg font-bold">${Number(product.price).toFixed(2)}</span>
-                <Button variant="secondary" size="sm">Add to Cart</Button>
+                <Button 
+                  variant="secondary" 
+                  size="sm"
+                  onClick={() => addToCart(product)}
+                  disabled={product.stock === 0}
+                >
+                  Add to Cart
+                </Button>
               </div>
             </div>
           </div>
