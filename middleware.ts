@@ -1,5 +1,7 @@
 import { auth } from "@/auth"
 import { NextResponse } from "next/server"
+import type { NextRequest } from 'next/server'
+import { pageview } from '@/hooks/use-analytics'
 
 export default auth((req) => {
   // req.auth // Session
@@ -46,4 +48,13 @@ export const config = {
      */
     '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
+}
+
+export function middleware(request: NextRequest) {
+  // Track page view
+  if (typeof window !== 'undefined') {
+    pageview(request.nextUrl.pathname)
+  }
+
+  return NextResponse.next()
 } 
