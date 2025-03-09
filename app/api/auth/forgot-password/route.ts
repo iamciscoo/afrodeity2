@@ -3,7 +3,9 @@ import { z } from "zod"
 import { prisma } from "@/lib/db"
 import { Resend } from "resend"
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const resend = process.env.RESEND_API_KEY 
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null
 
 const forgotPasswordSchema = z.object({
   email: z.string().email(),
@@ -37,6 +39,11 @@ export async function POST(req: Request) {
         resetTokenExpiry,
       },
     })
+
+    if (!resend) {
+      console.warn("Resend API key not configured, skipping email send")
+      return new NextResponse("Password reset email sent", { status: 200 })
+    }
 
     const resetUrl = `${process.env.AUTH_URL}/reset-password?token=${resetToken}`
 
