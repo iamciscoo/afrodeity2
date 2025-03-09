@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { MainNav } from "@/components/layout/main-nav"
 import { MobileNav } from "@/components/layout/mobile-nav"
 import { UserNav } from "@/components/layout/user-nav"
+import { CurrencyToggle } from "@/components/currency-toggle"
 
 interface HeaderProps {
   user?: User & {
@@ -40,6 +41,7 @@ export function Header({ user }: HeaderProps) {
               </Button>
             </form>
           </div>
+          <CurrencyToggle />
           <UserNav user={user} />
         </div>
       </div>

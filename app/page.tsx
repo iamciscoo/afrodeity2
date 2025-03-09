@@ -1,9 +1,15 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
 import { ArrowRight, ShoppingBag, Truck, Shield, Clock } from "lucide-react"
+import { formatPrice } from "@/lib/utils"
+import { useCurrency } from "@/store/use-currency"
 
 export default function HomePage() {
+  const { currency } = useCurrency()
+  
   return (
     <>
       {/* Hero Section */}
@@ -37,7 +43,7 @@ export default function HomePage() {
               <Truck className="h-8 w-8 text-primary" />
               <div>
                 <h3 className="font-semibold">Free Shipping</h3>
-                <p className="text-sm text-muted-foreground">On orders over $150</p>
+                <p className="text-sm text-muted-foreground">On orders over {formatPrice(150, currency)}</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -148,7 +154,7 @@ export default function HomePage() {
                   <h3 className="text-lg font-semibold">Product Name {i}</h3>
                   <p className="mt-1 text-sm text-muted-foreground">Product Description</p>
                   <div className="mt-2 flex items-center justify-between">
-                    <span className="text-lg font-bold">$99.99</span>
+                    <span className="text-lg font-bold">{formatPrice(99.99, currency)}</span>
                     <Button variant="ghost" size="sm">
                       Add to Cart
                     </Button>
