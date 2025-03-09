@@ -5,8 +5,7 @@ import { ErrorBoundary } from "@/components/error-boundary"
 import { Loading } from "@/components/loading"
 import { Toaster } from "sonner"
 import dynamic from "next/dynamic"
-import Script from "next/script"
-import { GA_TRACKING_ID } from "@/hooks/use-analytics"
+import { AnalyticsProvider } from "@/components/analytics-provider"
 import "./globals.css"
 
 const inter = Inter({
@@ -56,27 +55,10 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <head>
-        <Script
-          strategy="afterInteractive"
-          src={`https://www.googletagmanager.com/gtag/js?id=${GA_TRACKING_ID}`}
-        />
-        <Script
-          id="gtag-init"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', '${GA_TRACKING_ID}');
-            `,
-          }}
-        />
-      </head>
       <body
         className={`${inter.variable} ${robotoMono.variable} font-sans antialiased`}
       >
+        <AnalyticsProvider />
         <div className="relative flex min-h-screen flex-col">
           <Suspense fallback={<div className="h-16 border-b" />}>
             <Header user={session?.user} />
