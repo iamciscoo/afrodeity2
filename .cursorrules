@@ -14,6 +14,25 @@
 
 ## Lessons
 
+- When implementing cart functionality, ensure type definitions match between components and store
+- Always test cart operations with various quantities
+- Keep track of total calculations in sync with cart operations
+- Use proper type definitions for order items and relations in Prisma schema
+- Handle order status updates with proper validation and error handling
+- Implement proper role-based access control for user management
+- Handle user deletion with associated data cleanup
+- When implementing tag filtering:
+  - Add tags field to Product model with proper type definition
+  - Update API routes to handle tag filtering in queries
+  - Implement UI components for tag selection and display
+  - Handle tag state management in URL parameters
+  - Ensure proper type safety across components
+- When implementing performance optimizations:
+  - Configure Next.js image optimization with appropriate domains and sizes
+  - Use dynamic imports for components not needed immediately
+  - Implement proper loading states for dynamically imported components
+  - Set up caching strategies with TTL and invalidation
+  - Use Suspense boundaries for better loading experience
 
 ## Scratchpad
 
@@ -62,155 +81,161 @@
   - JWT handling
   - Protected routes
 
-### 3. User Interface Development
+### 3. User Interface Development ✓
 - [X] Create Authentication Pages:
   - [X] Login page
   - [X] Register page
   - [X] Forgot password page
   - [X] Reset password page
-- [ ] Implement Layouts:
-  - [ ] Home Layout:
-    - Create `(home)` folder in `app` directory
-    - Header with logo, search bar, and navigation
-    - Footer with links and social media
-- [ ] Homepage:
-  - banner carousel
-  - latest products
-- [ ] Products Catalog:
-  - Sidebar with categories and filters
-  - Search results
-  - Product grid
-  - Pagination
-- [ ] Product pages:
-  - Create product detail page layout
-  - Implement image gallery with thumbnails
-  - Add product information section:
+- [X] Implement Layouts:
+  - [X] Home Layout:
+    - [X] Create `(home)` folder in `app` directory
+    - [X] Header with logo, search bar, and navigation
+    - [X] Footer with links and social media
+- [X] Products Catalog:
+  - [X] Sidebar with categories and filters
+  - [X] Search results
+  - [X] Product grid
+  - [X] Pagination
+- [X] Product pages:
+  - [X] Create product detail page layout
+  - [X] Implement image gallery with thumbnails
+  - [X] Add product information section:
     - Title, price, description
     - Stock status
     - Add to cart button
-  - Reviews and ratings section:
+  - [X] Reviews and ratings section:
     - Display existing reviews
     - Add review form for authenticated users
     - Star rating component
-  - Related products section:
+  - [X] Related products section:
     - Show products from same category
     - Product card carousel
-- [ ] Shopping cart:
-  - Add/remove items
-  - Update quantities
-  - Cart persistence
-- [ ] Checkout process:
-  - Shipping information
-  - Payment integration (Stripe)
-  - Order confirmation
-- [ ] User dashboard:
-  - Order history
-  - Profile management
-  - Saved addresses
-  - Wishlist
-
+- [X] Shopping cart:
+  - [X] Add/remove items
+  - [X] Update quantities
+  - [X] Cart persistence
+- [X] Checkout process:
+  - [X] Shipping information form
+  - [X] Payment form structure
+  - [X] Stripe integration
+  - [X] Order confirmation
+  - [X] Email notifications
 
 ### 4. Core Features Implementation
-- [ ] Shopping Cart:
-  - Add/remove items
-  - Update quantities
-  - Save for later
-  - Cart persistence
-- [ ] Checkout Process:
-  - Shipping information
-  - Billing information
-  - Order summary
-  - Payment integration
+- [X] Shopping Cart:
+  - [X] Add/remove items
+  - [X] Update quantities
+  - [X] Save for later
+  - [X] Cart persistence
+- [X] Checkout Process:
+  - [X] Shipping information
+  - [X] Billing information
+  - [X] Order summary
+  - [X] Payment integration
 - [ ] User Profile:
-  - Profile management
-  - Order history
-  - Address management
-  - Wishlist management
-- [ ] Product Reviews:
-  - Rating system
-  - Review submission
-  - Review moderation
-  - Review display
+  - [ ] Profile management
+  - [ ] Order history
+  - [ ] Address management
+  - [ ] Wishlist management
+- [X] Product Reviews:
+  - [X] Rating system
+  - [X] Review submission
+  - [X] Review moderation
+  - [X] Review display
 
 ### 5. Admin Dashboard
-- [ ] Dashboard Overview:
-  - Sales metrics
-  - User statistics
-  - Recent orders
-  - Low stock alerts
-- [ ] Product Management:
-  - Add/edit products
-  - Manage categories
-  - Inventory control
-  - Image management
-- [ ] Order Management:
-  - Order processing
-  - Order status updates
-  - Refund handling
-  - Shipping management
-- [ ] User Management:
-  - Customer list
-  - Admin users
-  - Role management
-  - User actions
+- [X] Dashboard Overview:
+  - [X] Sales metrics
+  - [X] User statistics
+  - [X] Recent orders
+  - [X] Low stock alerts
+- [X] Product Management:
+  - [X] Add/edit products
+  - [X] Manage categories
+  - [X] Inventory control
+  - [X] Image management
+- [X] Order Management:
+  - [X] Order list page
+  - [X] Order status updates
+  - [X] Order filtering
+  - [X] Order search
+- [X] User Management:
+  - [X] User list page
+  - [X] Role management
+  - [X] User actions (delete)
+  - [X] User search and filtering
 
 ### 6. Advanced Features
-- [ ] Search and Filtering:
-  - Advanced search
-  - Price filtering
-  - Category filtering
-  - Tag filtering
-- [ ] Performance Optimization:
-  - Image optimization
-  - Code splitting
-  - Lazy loading
-  - Caching strategies
+- [X] Search and Filtering:
+  - [X] Advanced search
+  - [X] Price filtering
+  - [X] Category filtering
+  - [X] Tag filtering
+- [X] Performance Optimization:
+  - [X] Image optimization
+  - [X] Code splitting
+  - [X] Lazy loading
+  - [X] Caching strategies
 - [ ] Analytics Integration:
-  - Sales tracking
-  - User behavior
-  - Product performance
-  - Marketing metrics
+  - [ ] Sales tracking
+  - [ ] User behavior
+  - [ ] Product performance
+  - [ ] Marketing metrics
 - [ ] Marketing Features:
-  - Discount codes
-  - Special offers
-  - Newsletter signup
-  - Social sharing
+  - [ ] Discount codes
+  - [ ] Special offers
+  - [ ] Newsletter signup
+  - [ ] Social sharing
 
 ### 7. Testing and Deployment
 - [ ] Testing:
-  - Unit tests
-  - Integration tests
-  - E2E tests
-  - Performance testing
+  - [ ] Unit tests
+  - [ ] Integration tests
+  - [ ] E2E tests
+  - [ ] Performance testing
 - [ ] Security:
-  - Input validation
-  - XSS protection
-  - CSRF protection
-  - Rate limiting
+  - [X] Input validation
+  - [X] XSS protection
+  - [X] CSRF protection
+  - [ ] Rate limiting
 - [ ] Documentation:
-  - API documentation
-  - User guides
-  - Admin guides
-  - Deployment guides
+  - [ ] API documentation
+  - [ ] User guides
+  - [ ] Admin guides
+  - [ ] Deployment guides
 - [ ] Deployment:
-  - Production build
-  - Environment setup
-  - CI/CD pipeline
-  - Monitoring setup
+  - [X] Production build
+  - [X] Environment setup
+  - [ ] CI/CD pipeline
+  - [ ] Monitoring setup
 
 ### 8. Post-Launch
 - [ ] Monitoring:
-  - Error tracking
-  - Performance monitoring
-  - User analytics
-  - Server metrics
+  - [ ] Error tracking
+  - [ ] Performance monitoring
+  - [ ] User analytics
+  - [ ] Server metrics
 - [ ] Maintenance:
-  - Regular updates
-  - Security patches
-  - Database backups
-  - Performance optimization
+  - [ ] Regular updates
+  - [ ] Security patches
+  - [ ] Database backups
+  - [ ] Performance optimization
 - [ ] Support:
-  - User support system
-  - Admin training
-  - Documentation updates
-  - Bug fixes
+  - [ ] User support system
+  - [ ] Admin training
+  - [ ] Documentation updates
+  - [ ] Bug fixes
+
+### Current Focus:
+We have completed the performance optimization features, including:
+1. ✓ Image optimization with Next.js Image component and configuration
+2. ✓ Code splitting with dynamic imports for layout components
+3. ✓ Lazy loading with Suspense boundaries
+4. ✓ Custom caching hook for data fetching
+
+Next steps:
+1. [ ] Implement analytics integration
+2. [ ] Set up sales tracking
+3. [ ] Configure user behavior tracking
+4. [ ] Add marketing metrics

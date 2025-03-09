@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useCart } from "@/store/use-cart"
 import { ShippingForm } from "@/components/checkout/shipping-form"
-import { PaymentForm } from "@/components/checkout/payment-form"
+import { StripePaymentForm } from "@/components/checkout/payment-form"
 import { OrderSummary } from "@/components/checkout/order-summary"
 
 type CheckoutStep = "shipping" | "payment"
@@ -35,7 +35,7 @@ export default function CheckoutPage() {
             {step === "shipping" ? (
               <ShippingForm onSubmit={handleShippingSubmit} />
             ) : (
-              <PaymentForm
+              <StripePaymentForm
                 shippingData={shippingData}
                 onBack={handleBackToShipping}
               />

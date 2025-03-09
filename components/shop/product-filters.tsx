@@ -1,110 +1,189 @@
 "use client"
 
 import { useRouter, useSearchParams } from "next/navigation"
-import { Category } from "@prisma/client"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
+import { X } from "lucide-react"
 
 interface ProductFiltersProps {
-  categories: Category[]
+  categories: {
+    id: string
+    name: string
+  }[]
   searchParams: {
+    search?: string
     category?: string
     sort?: string
-    price_range?: string
+    min_price?: string
+    max_price?: string
+    tags?: string
   }
+  minPrice: number
+  maxPrice: number
+  tags: string[]
 }
 
-const sortOptions = [
-  { label: "Newest", value: "newest" },
-  { label: "Price: Low to High", value: "price_asc" },
-  { label: "Price: High to Low", value: "price_desc" },
-]
-
-const priceRanges = [
-  { label: "All", value: "" },
-  { label: "Under $50", value: "0-50" },
-  { label: "$50 - $100", value: "50-100" },
-  { label: "$100 - $200", value: "100-200" },
-  { label: "Over $200", value: "200-1000" },
-]
-
-export function ProductFilters({ categories, searchParams }: ProductFiltersProps) {
+export function ProductFilters({
+  categories,
+  searchParams,
+  minPrice,
+  maxPrice,
+  tags
+}: ProductFiltersProps) {
   const router = useRouter()
-  const currentParams = useSearchParams()
+  const params = useSearchParams()
 
-  function setFilter(name: string, value: string) {
-    const params = new URLSearchParams(currentParams.toString())
+  function createQueryString(
+    name: string,
+    value: string | null
+  ) {
+    const newParams = new URLSearchParams(params.toString())
     
-    if (value) {
-      params.set(name, value)
+    if (value === null) {
+      newParams.delete(name)
     } else {
-      params.delete(name)
+      newParams.set(name, value)
     }
+
+    // Reset to page 1 when filters change
+    if (name !== "page") {
+      newParams.delete("page")
+    }
+
+    return newParams.toString()
+  }
+
+  const selectedTags = searchParams.tags?.split(",").filter(Boolean) || []
+
+  const handleTagClick = (tag: string) => {
+    const newTags = selectedTags.includes(tag)
+      ? selectedTags.filter(t => t !== tag)
+      : [...selectedTags, tag]
     
-    // Reset to first page when filters change
-    params.delete('page')
-    
-    router.push(`/shop?${params.toString()}`)
+    router.push(
+      `?${createQueryString("tags", newTags.length > 0 ? newTags.join(",") : null)}`
+    )
   }
 
   return (
-    <div className="space-y-6">
-      {/* Categories */}
+    <div className="space-y-8">
       <div>
-        <h3 className="mb-4 text-lg font-semibold">Categories</h3>
-        <div className="space-y-2">
-          <Button
-            variant={!searchParams.category ? "default" : "outline"}
-            className="w-full justify-start"
-            onClick={() => setFilter("category", "")}
-          >
-            All Categories
-          </Button>
-          {categories.map((category) => (
-            <Button
-              key={category.id}
-              variant={searchParams.category === category.id ? "default" : "outline"}
-              className="w-full justify-start"
-              onClick={() => setFilter("category", category.id)}
+        <Label>Search</Label>
+        <Input
+          placeholder="Search products..."
+          value={searchParams.search || ""}
+          onChange={(e) => {
+            router.push(`?${createQueryString("search", e.target.value || null)}`)
+          }}
+        />
+      </div>
+
+      <div>
+        <Label>Category</Label>
+        <Select
+          value={searchParams.category || ""}
+          onValueChange={(value: string) => {
+            router.push(`?${createQueryString("category", value || null)}`)
+          }}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="All categories" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">All categories</SelectItem>
+            {categories.map((category) => (
+              <SelectItem key={category.id} value={category.id}>
+                {category.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label>Sort by</Label>
+        <Select
+          value={searchParams.sort || "createdAt.desc"}
+          onValueChange={(value: string) => {
+            router.push(`?${createQueryString("sort", value)}`)
+          }}
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="createdAt.desc">Newest</SelectItem>
+            <SelectItem value="createdAt.asc">Oldest</SelectItem>
+            <SelectItem value="price.asc">Price: Low to High</SelectItem>
+            <SelectItem value="price.desc">Price: High to Low</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label>Price Range</Label>
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            type="number"
+            placeholder="Min"
+            min={minPrice}
+            max={maxPrice}
+            value={searchParams.min_price || ""}
+            onChange={(e) => {
+              router.push(
+                `?${createQueryString("min_price", e.target.value || null)}`
+              )
+            }}
+          />
+          <Input
+            type="number"
+            placeholder="Max"
+            min={minPrice}
+            max={maxPrice}
+            value={searchParams.max_price || ""}
+            onChange={(e) => {
+              router.push(
+                `?${createQueryString("max_price", e.target.value || null)}`
+              )
+            }}
+          />
+        </div>
+      </div>
+
+      <div>
+        <Label>Tags</Label>
+        <div className="flex flex-wrap gap-2 mt-2">
+          {tags.map((tag) => (
+            <Badge
+              key={tag}
+              variant={selectedTags.includes(tag) ? "default" : "secondary"}
+              className="cursor-pointer"
+              onClick={() => handleTagClick(tag)}
             >
-              {category.name}
-            </Button>
+              {tag}
+            </Badge>
           ))}
         </div>
       </div>
 
-      {/* Sort */}
-      <div>
-        <h3 className="mb-4 text-lg font-semibold">Sort By</h3>
-        <div className="space-y-2">
-          {sortOptions.map((option) => (
-            <Button
-              key={option.value}
-              variant={searchParams.sort === option.value ? "default" : "outline"}
-              className="w-full justify-start"
-              onClick={() => setFilter("sort", option.value)}
-            >
-              {option.label}
-            </Button>
-          ))}
-        </div>
-      </div>
-
-      {/* Price Range */}
-      <div>
-        <h3 className="mb-4 text-lg font-semibold">Price Range</h3>
-        <div className="space-y-2">
-          {priceRanges.map((range) => (
-            <Button
-              key={range.value}
-              variant={searchParams.price_range === range.value ? "default" : "outline"}
-              className="w-full justify-start"
-              onClick={() => setFilter("price_range", range.value)}
-            >
-              {range.label}
-            </Button>
-          ))}
-        </div>
-      </div>
+      <Button
+        variant="outline"
+        onClick={() => {
+          router.push("/shop")
+        }}
+      >
+        Clear Filters
+        <X className="ml-2 h-4 w-4" />
+      </Button>
     </div>
   )
 } 

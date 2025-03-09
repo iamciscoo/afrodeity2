@@ -1,76 +1,123 @@
 "use client"
 
-import Image from "next/image"
 import Link from "next/link"
-import { Product, Category } from "@prisma/client"
+import Image from "next/image"
+import { useRouter, useSearchParams } from "next/navigation"
+import { formatPrice } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { ShoppingCart } from "lucide-react"
 
-interface ProductWithCategory extends Product {
-  category: Category
+interface Product {
+  id: string
+  name: string
+  description: string
+  price: number
+  images: string[]
+  tags: string[]
+  category: {
+    id: string
+    name: string
+  }
 }
 
 interface ProductGridProps {
-  products: ProductWithCategory[]
+  products: Product[]
   currentPage: number
   totalPages: number
 }
 
-export function ProductGrid({ products, currentPage, totalPages }: ProductGridProps) {
+export function ProductGrid({
+  products,
+  currentPage,
+  totalPages
+}: ProductGridProps) {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  function createQueryString(
+    name: string,
+    value: string
+  ) {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set(name, value)
+    return params.toString()
+  }
+
   return (
-    <div className="space-y-6">
-      {/* Products Grid */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div>
+      <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:gap-x-8">
         {products.map((product) => (
-          <div key={product.id} className="group relative overflow-hidden rounded-lg border">
-            <Link href={`/product/${product.id}`} className="relative block aspect-square">
-              {product.images[0] && (
-                <Image
-                  src={product.images[0]}
-                  alt={product.name}
-                  fill
-                  className="object-cover transition-transform group-hover:scale-105"
-                />
-              )}
-            </Link>
-            <div className="p-4">
-              <h3 className="font-semibold">
-                <Link href={`/product/${product.id}`}>{product.name}</Link>
-              </h3>
-              <p className="mt-1 text-sm text-muted-foreground">{product.category.name}</p>
-              <div className="mt-2 flex items-center justify-between">
-                <span className="text-lg font-bold">${Number(product.price).toFixed(2)}</span>
-                <Button variant="secondary" size="sm">Add to Cart</Button>
+          <div key={product.id} className="group relative">
+            <div className="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-md bg-gray-200 lg:aspect-none group-hover:opacity-75 lg:h-80">
+              <Image
+                src={product.images[0]}
+                alt={product.name}
+                className="h-full w-full object-cover object-center lg:h-full lg:w-full"
+                width={500}
+                height={500}
+              />
+            </div>
+            <div className="mt-4 flex justify-between">
+              <div>
+                <h3 className="text-sm text-gray-700">
+                  <Link href={`/products/${product.id}`}>
+                    <span aria-hidden="true" className="absolute inset-0" />
+                    {product.name}
+                  </Link>
+                </h3>
+                <p className="mt-1 text-sm text-gray-500">{product.category.name}</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {product.tags.map((tag) => (
+                    <Badge key={tag} variant="secondary" className="text-xs">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-900">
+                  {formatPrice(product.price)}
+                </p>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="mt-2"
+                  onClick={() => {
+                    // Add to cart functionality
+                  }}
+                >
+                  <ShoppingCart className="h-4 w-4" />
+                </Button>
               </div>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center gap-2">
+        <div className="mt-8 flex justify-center gap-2">
           <Button
             variant="outline"
-            disabled={currentPage <= 1}
+            size="sm"
             onClick={() => {
-              const searchParams = new URLSearchParams(window.location.search)
-              searchParams.set('page', String(currentPage - 1))
-              window.location.search = searchParams.toString()
+              router.push(
+                `?${createQueryString("page", String(currentPage - 1))}`
+              )
             }}
+            disabled={currentPage <= 1}
           >
             Previous
           </Button>
-          <span className="flex h-9 items-center justify-center px-4">
-            Page {currentPage} of {totalPages}
-          </span>
           <Button
             variant="outline"
-            disabled={currentPage >= totalPages}
+            size="sm"
             onClick={() => {
-              const searchParams = new URLSearchParams(window.location.search)
-              searchParams.set('page', String(currentPage + 1))
-              window.location.search = searchParams.toString()
+              router.push(
+                `?${createQueryString("page", String(currentPage + 1))}`
+              )
             }}
+            disabled={currentPage >= totalPages}
           >
             Next
           </Button>

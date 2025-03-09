@@ -63,22 +63,22 @@ model Session {
 }
 
 model Product {
-  id          String      @id @default(cuid())
+  id          String    @id @default(cuid())
   name        String
   description String
-  price       Decimal     @db.Decimal(10, 2)
-  images      String[]
+  price       Decimal
+  stock       Int      @default(0)
+  sku         String   @unique
+  tags        String[] @default([])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   categoryId  String
-  stock       Int         @default(0)
-  sku         String      @unique
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-
-  // Relations
-  category    Category    @relation(fields: [categoryId], references: [id])
-  reviews     Review[]
+  category    Category @relation(fields: [categoryId], references: [id])
+  images      String[]
   orderItems  OrderItem[]
-  cartItems   CartItem[]
+  reviews     Review[]
+
+  @@index([categoryId])
 }
 
 model Category {

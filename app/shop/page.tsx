@@ -1,86 +1,87 @@
-import { prisma } from "@/lib/db"
+import { db } from "@/lib/db"
 import { ProductGrid } from "@/components/shop/product-grid"
 import { ProductFilters } from "@/components/shop/product-filters"
 
 interface ShopPageProps {
   searchParams: {
+    page?: string
+    search?: string
     category?: string
     sort?: string
-    price_range?: string
-    page?: string
+    min_price?: string
+    max_price?: string
+    tags?: string
   }
 }
 
 export default async function ShopPage({ searchParams }: ShopPageProps) {
-  // Get all categories for the filter
-  const categories = await prisma.category.findMany({
-    orderBy: {
-      name: 'asc'
-    }
-  })
-
-  // Build the query based on filters
-  const where = {
-    ...(searchParams.category && {
-      categoryId: searchParams.category
-    })
-  }
-
-  // Handle price range filter
-  if (searchParams.price_range) {
-    const [min, max] = searchParams.price_range.split('-').map(Number)
-    Object.assign(where, {
-      price: {
-        gte: min,
-        lte: max
-      }
-    })
-  }
-
-  // Handle sorting
-  const orderBy = searchParams.sort === 'price_desc' 
-    ? { price: 'desc' as const }
-    : searchParams.sort === 'price_asc'
-    ? { price: 'asc' as const }
-    : { createdAt: 'desc' as const }
-
-  // Handle pagination
-  const page = Number(searchParams.page) || 1
+  const page = parseInt(searchParams.page || "1")
   const limit = 12
+  const search = searchParams.search || ""
+  const category = searchParams.category || undefined
+  const sort = searchParams.sort || "createdAt.desc"
+  const [sortField, sortOrder] = sort.split(".")
+  const minPrice = parseFloat(searchParams.min_price || "0")
+  const maxPrice = parseFloat(searchParams.max_price || "999999")
+  const tags = searchParams.tags?.split(",").filter(Boolean) || []
+
   const skip = (page - 1) * limit
 
-  // Get products with filters
-  const products = await prisma.product.findMany({
-    where,
-    orderBy,
-    skip,
-    take: limit,
-    include: {
-      category: true
+  const where = {
+    AND: [
+      {
+        OR: [
+          { name: { contains: search, mode: "insensitive" } },
+          { description: { contains: search, mode: "insensitive" } }
+        ]
+      },
+      { categoryId: category },
+      { price: { gte: minPrice, lte: maxPrice } },
+      tags.length > 0 ? { tags: { hasEvery: tags } } : {}
+    ].filter(Boolean)
+  }
+
+  const [products, categories, total] = await Promise.all([
+    db.product.findMany({
+      where,
+      include: {
+        category: true
+      },
+      orderBy: {
+        [sortField]: sortOrder.toLowerCase()
+      },
+      skip,
+      take: limit
+    }),
+    db.category.findMany(),
+    db.product.count({ where })
+  ])
+
+  // Get all unique tags from products
+  const allTags = await db.product.findMany({
+    select: {
+      tags: true
     }
   })
-
-  // Get total count for pagination
-  const totalProducts = await prisma.product.count({ where })
-  const totalPages = Math.ceil(totalProducts / limit)
+  const uniqueTags = Array.from(new Set(allTags.flatMap(p => p.tags)))
 
   return (
-    <div className="container px-4 py-8 md:px-6 lg:py-12">
-      <div className="flex flex-col gap-8 md:flex-row">
-        {/* Filters Sidebar */}
-        <aside className="w-full md:w-64">
-          <ProductFilters 
+    <div className="px-4 sm:px-6 lg:px-8 py-8">
+      <div className="lg:grid lg:grid-cols-5 lg:gap-x-8">
+        <div className="hidden lg:block">
+          <ProductFilters
             categories={categories}
             searchParams={searchParams}
+            minPrice={0}
+            maxPrice={999999}
+            tags={uniqueTags}
           />
-        </aside>
-
-        {/* Product Grid */}
-        <div className="flex-1">
-          <ProductGrid 
+        </div>
+        <div className="lg:col-span-4">
+          <ProductGrid
             products={products}
             currentPage={page}
-            totalPages={totalPages}
+            totalPages={Math.ceil(total / limit)}
           />
         </div>
       </div>

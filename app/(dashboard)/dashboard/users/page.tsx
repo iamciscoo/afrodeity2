@@ -1,0 +1,34 @@
+import { auth } from "@/auth"
+import { redirect } from "next/navigation"
+import { prisma } from "@/lib/db"
+import { UsersTable } from "@/components/dashboard/users/users-table"
+import { UsersTableToolbar } from "@/components/dashboard/users/users-table-toolbar"
+
+export default async function UsersPage() {
+  const session = await auth()
+
+  if (!session?.user || session.user.role !== "ADMIN") {
+    redirect("/login")
+  }
+
+  const users = await prisma.user.findMany({
+    include: {
+      orders: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  })
+
+  return (
+    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+      <div className="flex items-center justify-between space-y-2">
+        <h2 className="text-3xl font-bold tracking-tight">Users</h2>
+      </div>
+      <div className="space-y-4">
+        <UsersTableToolbar />
+        <UsersTable users={users} />
+      </div>
+    </div>
+  )
+} 

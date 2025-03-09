@@ -1,3 +1,5 @@
+"use client"
+
 import { useEffect } from 'react'
 import { useAnalytics } from './use-analytics'
 

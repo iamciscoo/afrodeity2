@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { User } from "next-auth"
-import { signOut } from "@/auth"
+import { signOut } from "next-auth/react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,7 +41,7 @@ export function UserNav({ user }: UserNavProps) {
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent className="w-56" align="end">
             <div className="flex items-center justify-start gap-2 p-2">
               <div className="flex flex-col space-y-1 leading-none">
                 {user.name && <p className="font-medium">{user.name}</p>}
@@ -52,22 +52,23 @@ export function UserNav({ user }: UserNavProps) {
                 )}
               </div>
             </div>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuSeparator className="my-1" />
+            <DropdownMenuItem className="focus:bg-accent" inset>
               <Link href="/dashboard" className="w-full">Dashboard</Link>
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem className="focus:bg-accent" inset>
               <Link href="/dashboard/orders" className="w-full">Orders</Link>
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem className="focus:bg-accent" inset>
               <Link href="/dashboard/settings" className="w-full">Settings</Link>
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="my-1" />
             <DropdownMenuItem
+              className="focus:bg-accent"
+              inset
               onClick={() => {
                 signOut({
-                  redirect: true,
-                  redirectTo: "/login",
+                  callbackUrl: "/login",
                 })
               }}
             >

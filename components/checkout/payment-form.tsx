@@ -1,29 +1,38 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useCart } from "@/store/use-cart"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { ShippingData } from "./shipping-form"
+import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js"
+import { getStripe } from "@/lib/stripe"
 
 interface PaymentFormProps {
   shippingData: ShippingData
   onBack: () => void
 }
 
-export function PaymentForm({ shippingData, onBack }: PaymentFormProps) {
+function PaymentForm({ shippingData, onBack }: PaymentFormProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const { items, total, clearCart } = useCart()
+  const stripe = useStripe()
+  const elements = useElements()
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    
+    if (!stripe || !elements) {
+      return
+    }
+
     setIsLoading(true)
 
     try {
-      // Create order in the database
-      const response = await fetch("/api/orders", {
+      // Create payment intent and order
+      const response = await fetch("/api/stripe", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -34,17 +43,7 @@ export function PaymentForm({ shippingData, onBack }: PaymentFormProps) {
             quantity: item.quantity,
             price: item.product.price,
           })),
-          total: total,
-          shippingAddress: {
-            fullName: shippingData.fullName,
-            email: shippingData.email,
-            phone: shippingData.phone,
-            address: shippingData.address,
-            city: shippingData.city,
-            state: shippingData.state,
-            postalCode: shippingData.postalCode,
-            country: shippingData.country,
-          },
+          shippingAddress: shippingData,
         }),
       })
 
@@ -52,15 +51,22 @@ export function PaymentForm({ shippingData, onBack }: PaymentFormProps) {
         throw new Error("Failed to create order")
       }
 
-      const { orderId } = await response.json()
+      const { clientSecret, orderId } = await response.json()
 
-      // TODO: Implement Stripe payment
-      // For now, just simulate a successful payment
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      // Confirm payment with Stripe
+      const { error } = await stripe.confirmPayment({
+        elements,
+        confirmParams: {
+          return_url: `${window.location.origin}/checkout/success?orderId=${orderId}`,
+        },
+      })
 
-      // Clear cart and redirect to success page
+      if (error) {
+        throw error
+      }
+
+      // Payment successful - clear cart and redirect will happen automatically
       clearCart()
-      router.push(`/checkout/success?orderId=${orderId}`)
     } catch (error) {
       console.error("Checkout error:", error)
       toast.error("Something went wrong. Please try again.")
@@ -79,12 +85,7 @@ export function PaymentForm({ shippingData, onBack }: PaymentFormProps) {
       </div>
 
       <form onSubmit={onSubmit} className="space-y-4">
-        {/* TODO: Add Stripe Elements */}
-        <div className="rounded-lg border p-4">
-          <p className="text-sm text-muted-foreground">
-            Payment functionality will be implemented with Stripe.
-          </p>
-        </div>
+        <PaymentElement />
 
         <div className="flex gap-4">
           <Button
@@ -98,12 +99,60 @@ export function PaymentForm({ shippingData, onBack }: PaymentFormProps) {
           <Button
             type="submit"
             className="flex-1"
-            disabled={isLoading}
+            disabled={isLoading || !stripe || !elements}
           >
             {isLoading ? "Processing..." : `Pay $${total.toFixed(2)}`}
           </Button>
         </div>
       </form>
     </div>
+  )
+}
+
+// Wrapper component to provide Stripe context
+export function StripePaymentForm(props: PaymentFormProps) {
+  const [clientSecret, setClientSecret] = useState<string>()
+  const { items } = useCart()
+
+  // Initialize payment intent when component mounts
+  useEffect(() => {
+    fetch("/api/stripe", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        items: items.map(item => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          price: item.product.price,
+        })),
+        shippingAddress: props.shippingData,
+      }),
+    })
+      .then((res) => res.json())
+      .then((data) => setClientSecret(data.clientSecret))
+      .catch((error) => {
+        console.error("Failed to initialize payment:", error)
+        toast.error("Failed to initialize payment. Please try again.")
+      })
+  }, [items, props.shippingData])
+
+  if (!clientSecret) {
+    return <div>Loading payment form...</div>
+  }
+
+  return (
+    <Elements
+      stripe={getStripe()}
+      options={{
+        clientSecret,
+        appearance: {
+          theme: "stripe",
+        },
+      }}
+    >
+      <PaymentForm {...props} />
+    </Elements>
   )
 } 
