@@ -2,23 +2,16 @@ import * as React from "react"
 import * as LabelPrimitive from "@radix-ui/react-label"
 import { Slot } from "@radix-ui/react-slot"
 import type { FieldValues, UseFormReturn } from "react-hook-form"
-
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
 
-type FormProps<TFieldValues extends FieldValues = FieldValues> = {
-  form: UseFormReturn<TFieldValues>
-  onSubmit: (data: TFieldValues) => void | Promise<void>
-  children: React.ReactNode
+type FormProps<T extends FieldValues> = React.PropsWithChildren<{
+  form: UseFormReturn<T>
+  onSubmit: (data: T) => Promise<void> | void
   className?: string
-}
+}>
 
-function Form<TFieldValues extends FieldValues>({
-  form,
-  onSubmit,
-  children,
-  className,
-}: FormProps<TFieldValues>) {
+export function Form<T extends FieldValues>({ form, onSubmit, children, className }: FormProps<T>) {
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className={className}>
       {children}
@@ -26,52 +19,24 @@ function Form<TFieldValues extends FieldValues>({
   )
 }
 
-const FormItem = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => {
-  return <div ref={ref} className={cn("space-y-2", className)} {...props} />
-})
-FormItem.displayName = "FormItem"
+export function FormItem({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return <div className={cn("space-y-2", className)} {...props} />
+}
 
-const FormLabel = React.forwardRef<
-  React.ElementRef<typeof LabelPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
->(({ className, ...props }, ref) => {
-  return <Label ref={ref} className={cn("", className)} {...props} />
-})
-FormLabel.displayName = "FormLabel"
+export function FormLabel({ className, ...props }: React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>) {
+  return <Label className={cn("", className)} {...props} />
+}
 
-const FormControl = React.forwardRef<
-  React.ElementRef<typeof Slot>,
-  React.ComponentPropsWithoutRef<typeof Slot>
->(({ ...props }, ref) => {
-  return <Slot ref={ref} {...props} />
-})
-FormControl.displayName = "FormControl"
+export function FormControl({ ...props }: React.ComponentPropsWithoutRef<typeof Slot>) {
+  return <Slot {...props} />
+}
 
-const FormMessage = React.forwardRef<
-  HTMLParagraphElement,
-  React.HTMLAttributes<HTMLParagraphElement>
->(({ className, children, ...props }, ref) => {
+export function FormMessage({ className, children, ...props }: React.HTMLAttributes<HTMLParagraphElement>) {
   if (!children) return null
 
   return (
-    <p
-      ref={ref}
-      className={cn("text-sm font-medium text-destructive", className)}
-      {...props}
-    >
+    <p className={cn("text-sm font-medium text-destructive", className)} {...props}>
       {children}
     </p>
   )
-})
-FormMessage.displayName = "FormMessage"
-
-export {
-  Form,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
 } 

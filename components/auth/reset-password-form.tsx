@@ -1,7 +1,8 @@
+"use client"
+
 import * as React from "react"
 import { useSearchParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
-import type { FieldValues, UseFormReturn } from "react-hook-form"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { Button } from "@/components/ui/button"
@@ -30,7 +31,7 @@ type FormData = z.infer<typeof formSchema>
 
 export function ResetPasswordForm() {
   const searchParams = useSearchParams()
-  const [isPending, startTransition] = React.useTransition()
+  const [isPending, setPending] = React.useState(false)
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -48,7 +49,8 @@ export function ResetPasswordForm() {
       return
     }
 
-    startTransition(async () => {
+    setPending(true)
+    try {
       const response = await fetch("/api/auth/reset-password", {
         method: "POST",
         headers: {
@@ -67,7 +69,11 @@ export function ResetPasswordForm() {
 
       toast.success("Password reset successful. You can now login with your new password.")
       form.reset()
-    })
+    } catch (error) {
+      toast.error("Something went wrong. Please try again.")
+    } finally {
+      setPending(false)
+    }
   }
 
   return (

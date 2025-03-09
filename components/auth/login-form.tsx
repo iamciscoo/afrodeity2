@@ -1,10 +1,11 @@
+"use client"
+
 import * as React from "react"
 import { useSearchParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
-import type { FieldValues, UseFormReturn } from "react-hook-form"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
-import { signIn } from "next-auth/react"
+import { signIn } from "@/auth"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -30,7 +31,7 @@ type FormData = z.infer<typeof formSchema>
 
 export function LoginForm() {
   const searchParams = useSearchParams()
-  const [isPending, startTransition] = React.useTransition()
+  const [isPending, setPending] = React.useState(false)
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -41,14 +42,15 @@ export function LoginForm() {
   })
 
   async function onSubmit(values: FormData) {
-    startTransition(async () => {
-      const signInResult = await signIn("credentials", {
+    setPending(true)
+    try {
+      const result = await signIn("credentials", {
         email: values.email,
         password: values.password,
         redirect: false,
       })
 
-      if (signInResult?.error) {
+      if (result?.error) {
         toast.error("Invalid credentials")
         form.setError("email", { message: "Invalid credentials" })
         form.setError("password", { message: "Invalid credentials" })
@@ -56,7 +58,11 @@ export function LoginForm() {
         const from = searchParams.get("from") || "/"
         window.location.replace(from)
       }
-    })
+    } catch (error) {
+      toast.error("Something went wrong. Please try again.")
+    } finally {
+      setPending(false)
+    }
   }
 
   return (
