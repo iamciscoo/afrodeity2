@@ -1,5 +1,6 @@
 import { Metadata } from "next"
 import Link from "next/link"
+import { Suspense } from "react"
 import { RegisterForm } from "@/components/auth/register-form"
 
 export const metadata: Metadata = {
@@ -46,7 +47,9 @@ export default function RegisterPage() {
               Enter your details below to create your account
             </p>
           </div>
-          <RegisterForm />
+          <Suspense fallback={<div>Loading...</div>}>
+            <RegisterForm />
+          </Suspense>
           <p className="px-8 text-center text-sm text-muted-foreground">
             <Link
               href="/login"

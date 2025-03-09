@@ -1,6 +1,7 @@
 import * as React from "react"
 import { useSearchParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
+import type { FieldValues, UseFormReturn } from "react-hook-form"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { signIn } from "next-auth/react"
@@ -8,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import {
   Form,
   FormControl,
-  FormField,
   FormItem,
   FormLabel,
   FormMessage,
@@ -40,7 +40,7 @@ export function LoginForm() {
     },
   })
 
-  function onSubmit(values: FormData) {
+  async function onSubmit(values: FormData) {
     startTransition(async () => {
       const signInResult = await signIn("credentials", {
         email: values.email,
@@ -50,6 +50,8 @@ export function LoginForm() {
 
       if (signInResult?.error) {
         toast.error("Invalid credentials")
+        form.setError("email", { message: "Invalid credentials" })
+        form.setError("password", { message: "Invalid credentials" })
       } else {
         const from = searchParams.get("from") || "/"
         window.location.replace(from)
@@ -59,55 +61,51 @@ export function LoginForm() {
 
   return (
     <div className="grid gap-6">
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input
-                    type="email"
-                    placeholder="name@example.com"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <Input
-                    type="password"
-                    placeholder="Enter your password"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={isPending}
-            variant="default"
-            size="lg"
-          >
-            {isPending && (
-              <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-            )}
-            Sign In
-          </Button>
-        </form>
+      <Form form={form} onSubmit={onSubmit} className="space-y-4">
+        <FormItem className="space-y-1">
+          <FormLabel className="block text-sm font-medium">Email</FormLabel>
+          <FormControl>
+            <Input
+              type="email"
+              placeholder="name@example.com"
+              className="w-full"
+              {...form.register("email")}
+            />
+          </FormControl>
+          {form.formState.errors.email && (
+            <FormMessage className="text-sm text-red-500">
+              {form.formState.errors.email.message}
+            </FormMessage>
+          )}
+        </FormItem>
+        <FormItem className="space-y-1">
+          <FormLabel className="block text-sm font-medium">Password</FormLabel>
+          <FormControl>
+            <Input
+              type="password"
+              placeholder="Enter your password"
+              className="w-full"
+              {...form.register("password")}
+            />
+          </FormControl>
+          {form.formState.errors.password && (
+            <FormMessage className="text-sm text-red-500">
+              {form.formState.errors.password.message}
+            </FormMessage>
+          )}
+        </FormItem>
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={isPending}
+          variant="default"
+          size="lg"
+        >
+          {isPending && (
+            <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+          )}
+          Sign In
+        </Button>
       </Form>
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
@@ -123,6 +121,7 @@ export function LoginForm() {
         <Button
           variant="outline"
           size="lg"
+          className="w-full"
           onClick={() => signIn("github")}
           disabled={isPending}
         >
@@ -136,6 +135,7 @@ export function LoginForm() {
         <Button
           variant="outline"
           size="lg"
+          className="w-full"
           onClick={() => signIn("google")}
           disabled={isPending}
         >
