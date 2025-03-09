@@ -1,11 +1,7 @@
-"use client"
-
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
 import { ArrowRight, ShoppingBag, Truck, Shield, Clock } from "lucide-react"
-import { PriceDisplay } from "@/components/price-display"
-import { NewsletterForm } from "@/components/newsletter-form"
 
 export default function HomePage() {
   return (
