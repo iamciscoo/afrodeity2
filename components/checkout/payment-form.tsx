@@ -15,7 +15,7 @@ interface PaymentFormProps {
 export function PaymentForm({ shippingData, onBack }: PaymentFormProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
-  const { items, getCartTotal, clearCart } = useCart()
+  const { items, total, clearCart } = useCart()
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -34,7 +34,7 @@ export function PaymentForm({ shippingData, onBack }: PaymentFormProps) {
             quantity: item.quantity,
             price: item.product.price,
           })),
-          total: getCartTotal(),
+          total: total,
           shippingAddress: {
             fullName: shippingData.fullName,
             email: shippingData.email,
@@ -100,7 +100,7 @@ export function PaymentForm({ shippingData, onBack }: PaymentFormProps) {
             className="flex-1"
             disabled={isLoading}
           >
-            {isLoading ? "Processing..." : `Pay $${getCartTotal().toFixed(2)}`}
+            {isLoading ? "Processing..." : `Pay $${total.toFixed(2)}`}
           </Button>
         </div>
       </form>
