@@ -1,11 +1,18 @@
 import { PrismaClient } from '@prisma/client';
-import { hash } from 'bcrypt';
+import crypto from 'crypto';
 
 const prisma = new PrismaClient();
 
+async function getPasswordHash(password: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password);
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return Buffer.from(hash).toString('hex');
+}
+
 async function main() {
   // Create Admin User
-  const adminPassword = await hash('admin123', 12);
+  const adminPassword = await getPasswordHash('admin123');
   const admin = await prisma.user.upsert({
     where: { email: 'admin@afrodeity.com' },
     update: {},
