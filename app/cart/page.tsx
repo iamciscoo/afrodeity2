@@ -10,7 +10,7 @@ import { toast } from "sonner"
 import { Trash2 } from "lucide-react"
 
 export default function CartPage() {
-  const { items, removeItem, updateQuantity, getCartTotal } = useCart()
+  const { items, removeItem, updateQuantity, total } = useCart()
 
   // Hydrate cart on mount
   useEffect(() => {
@@ -116,7 +116,7 @@ export default function CartPage() {
             <div className="mt-4 space-y-4">
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span>${getCartTotal().toFixed(2)}</span>
+                <span>${total.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Shipping</span>
@@ -125,7 +125,7 @@ export default function CartPage() {
               <div className="border-t pt-4">
                 <div className="flex justify-between font-semibold">
                   <span>Total</span>
-                  <span>${getCartTotal().toFixed(2)}</span>
+                  <span>${total.toFixed(2)}</span>
                 </div>
               </div>
               <Button className="w-full" size="lg" asChild>

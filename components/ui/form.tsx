@@ -1,7 +1,7 @@
 import * as React from "react"
 import * as LabelPrimitive from "@radix-ui/react-label"
 import { Slot } from "@radix-ui/react-slot"
-import type { FieldValues, UseFormReturn } from "react-hook-form"
+import { Controller, ControllerProps, FieldPath, FieldValues, UseFormReturn } from "react-hook-form"
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
 
@@ -16,6 +16,15 @@ export function Form<T extends FieldValues>({ form, onSubmit, children, classNam
     <form onSubmit={form.handleSubmit(onSubmit)} className={className}>
       {children}
     </form>
+  )
+}
+
+export function FormField<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
+>({ ...props }: ControllerProps<TFieldValues, TName>) {
+  return (
+    <Controller {...props} />
   )
 }
 
