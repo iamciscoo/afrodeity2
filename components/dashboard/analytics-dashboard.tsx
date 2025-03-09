@@ -78,7 +78,7 @@ export function AnalyticsDashboard() {
     )
   }
 
-  const analyticsData = data || DEFAULT_DATA
+  const analyticsData = data ?? DEFAULT_DATA
 
   const chartData = Array.from({ length: 7 }, (_, i) => ({
     name: `Day ${i + 1}`,
