@@ -69,19 +69,46 @@
   - [X] Forgot password page
   - [X] Reset password page
 - [ ] Implement Layouts:
-  - Main layout with navigation
-  - Dashboard layout
-  - Admin layout
-- [ ] Build Product Pages:
-  - Product listing with filters
-  - Product details page
-  - Product search functionality
-  - Product categories view
-- [ ] Create Shopping Features:
-  - Shopping cart sidebar
-  - Wishlist functionality
-  - Quick view modal
-  - Size/variant selector
+  - [ ] Home Layout:
+    - Create `(home)` folder in `app` directory
+    - Header with logo, search bar, and navigation
+    - Footer with links and social media
+- [ ] Homepage:
+  - banner carousel
+  - latest products
+- [ ] Products Catalog:
+  - Sidebar with categories and filters
+  - Search results
+  - Product grid
+  - Pagination
+- [ ] Product pages:
+  - Create product detail page layout
+  - Implement image gallery with thumbnails
+  - Add product information section:
+    - Title, price, description
+    - Stock status
+    - Add to cart button
+  - Reviews and ratings section:
+    - Display existing reviews
+    - Add review form for authenticated users
+    - Star rating component
+  - Related products section:
+    - Show products from same category
+    - Product card carousel
+- [ ] Shopping cart:
+  - Add/remove items
+  - Update quantities
+  - Cart persistence
+- [ ] Checkout process:
+  - Shipping information
+  - Payment integration (Stripe)
+  - Order confirmation
+- [ ] User dashboard:
+  - Order history
+  - Profile management
+  - Saved addresses
+  - Wishlist
+
 
 ### 4. Core Features Implementation
 - [ ] Shopping Cart:
