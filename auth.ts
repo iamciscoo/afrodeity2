@@ -1,5 +1,5 @@
-import NextAuth from "next-auth"
 import { PrismaAdapter } from "@auth/prisma-adapter"
+import NextAuth from "next-auth"
 import { prisma } from "@/lib/db"
 import GitHub from "next-auth/providers/github"
 import Google from "next-auth/providers/google"
@@ -18,6 +18,10 @@ async function getPasswordHash(password: string): Promise<string> {
   return Buffer.from(hash).toString('hex');
 }
 
+if (!process.env.NEXTAUTH_SECRET) {
+  throw new Error('NEXTAUTH_SECRET is not set')
+}
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
@@ -26,33 +30,38 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   providers: [
     GitHub({
-      clientId: process.env.GITHUB_ID,
-      clientSecret: process.env.GITHUB_SECRET,
+      clientId: process.env.GITHUB_ID || '',
+      clientSecret: process.env.GITHUB_SECRET || '',
     }),
     Google({
-      clientId: process.env.GOOGLE_ID,
-      clientSecret: process.env.GOOGLE_SECRET,
+      clientId: process.env.GOOGLE_ID || '',
+      clientSecret: process.env.GOOGLE_SECRET || '',
     }),
     Credentials({
       async authorize(credentials) {
-        const parsedCredentials = loginSchema.safeParse(credentials)
+        try {
+          const parsedCredentials = loginSchema.safeParse(credentials)
 
-        if (parsedCredentials.success) {
-          const { email, password } = parsedCredentials.data
-          const user = await prisma.user.findUnique({
-            where: { email }
-          })
+          if (parsedCredentials.success) {
+            const { email, password } = parsedCredentials.data
+            const user = await prisma.user.findUnique({
+              where: { email }
+            })
+            
+            if (!user || !user.password) return null
+            
+            const hashedPassword = await getPasswordHash(password)
+            const passwordsMatch = user.password === hashedPassword
+            
+            if (passwordsMatch) return user
+          }
           
-          if (!user || !user.password) return null
-          
-          const hashedPassword = await getPasswordHash(password)
-          const passwordsMatch = user.password === hashedPassword
-          
-          if (passwordsMatch) return user
+          console.log("Invalid credentials")
+          return null
+        } catch (error) {
+          console.error("Auth error:", error)
+          return null
         }
-        
-        console.log("Invalid credentials")
-        return null
       }
     })
   ],
@@ -71,15 +80,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token }) {
       if (!token.sub) return token
 
-      const user = await prisma.user.findUnique({
-        where: { id: token.sub }
-      })
+      try {
+        const user = await prisma.user.findUnique({
+          where: { id: token.sub }
+        })
 
-      if (!user) return token
+        if (!user) return token
 
-      token.role = user.role
+        token.role = user.role
 
-      return token
+        return token
+      } catch (error) {
+        console.error("JWT error:", error)
+        return token
+      }
     }
   }
 }) 
