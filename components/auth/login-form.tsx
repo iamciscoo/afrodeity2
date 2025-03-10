@@ -43,6 +43,7 @@ export function LoginForm() {
 
   async function onSubmit(values: FormData) {
     setPending(true)
+
     try {
       const result = await signIn("credentials", {
         email: values.email,
@@ -50,14 +51,13 @@ export function LoginForm() {
         redirect: false,
       })
 
-      if (result?.error) {
-        toast.error("Invalid credentials")
-        form.setError("email", { message: "Invalid credentials" })
-        form.setError("password", { message: "Invalid credentials" })
-      } else {
-        const from = searchParams.get("from") || "/"
-        window.location.replace(from)
+      if (!result?.ok) {
+        toast.error("Invalid email or password")
+        return
       }
+
+      const returnUrl = searchParams.get("from") || "/"
+      window.location.replace(returnUrl)
     } catch (error) {
       toast.error("Something went wrong. Please try again.")
     } finally {
@@ -67,51 +67,47 @@ export function LoginForm() {
 
   return (
     <div className="grid gap-6">
-      <Form form={form} onSubmit={onSubmit} className="space-y-4">
-        <FormItem className="space-y-1">
-          <FormLabel className="block text-sm font-medium">Email</FormLabel>
-          <FormControl>
-            <Input
-              type="email"
-              placeholder="name@example.com"
-              className="w-full"
-              {...form.register("email")}
-            />
-          </FormControl>
-          {form.formState.errors.email && (
-            <FormMessage className="text-sm text-red-500">
-              {form.formState.errors.email.message}
-            </FormMessage>
-          )}
-        </FormItem>
-        <FormItem className="space-y-1">
-          <FormLabel className="block text-sm font-medium">Password</FormLabel>
-          <FormControl>
-            <Input
-              type="password"
-              placeholder="Enter your password"
-              className="w-full"
-              {...form.register("password")}
-            />
-          </FormControl>
-          {form.formState.errors.password && (
-            <FormMessage className="text-sm text-red-500">
-              {form.formState.errors.password.message}
-            </FormMessage>
-          )}
-        </FormItem>
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={isPending}
-          variant="default"
-          size="lg"
-        >
-          {isPending && (
-            <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-          )}
-          Sign In
-        </Button>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormItem className="space-y-1">
+            <FormLabel className="block text-sm font-medium">Email</FormLabel>
+            <FormControl>
+              <Input
+                {...form.register("email")}
+                type="email"
+                placeholder="name@example.com"
+                className="w-full"
+                disabled={isPending}
+              />
+            </FormControl>
+            <FormMessage className="text-sm text-red-500" />
+          </FormItem>
+          <FormItem className="space-y-1">
+            <FormLabel className="block text-sm font-medium">Password</FormLabel>
+            <FormControl>
+              <Input
+                {...form.register("password")}
+                type="password"
+                placeholder="••••••••"
+                className="w-full"
+                disabled={isPending}
+              />
+            </FormControl>
+            <FormMessage className="text-sm text-red-500" />
+          </FormItem>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isPending}
+            variant="default"
+            size="lg"
+          >
+            {isPending && (
+              <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+            )}
+            Sign In
+          </Button>
+        </form>
       </Form>
       <div className="relative">
         <div className="absolute inset-0 flex items-center">

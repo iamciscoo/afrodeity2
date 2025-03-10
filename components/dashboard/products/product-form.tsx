@@ -6,7 +6,7 @@ import { Category } from "@prisma/client"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
-import { toast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -30,44 +30,58 @@ import { Badge } from "@/components/ui/badge"
 import { X } from "lucide-react"
 import { useState } from "react"
 import { Label } from "@/components/ui/label"
-import { useToast } from "@/hooks/use-toast"
+import { Icons } from "@/components/icons"
 
-const productSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  description: z.string().min(1, "Description is required"),
-  price: z.coerce.number().min(0, "Price must be greater than 0"),
-  stock: z.coerce.number().min(0, "Stock must be greater than or equal to 0"),
-  categoryId: z.string().min(1, "Category is required"),
-  images: z.array(z.string()).min(1, "At least one image is required"),
-  sku: z.string().min(1, "SKU is required"),
-  tags: z.array(z.string()).default([])
+const formSchema = z.object({
+  name: z.string().min(2, {
+    message: "Name must be at least 2 characters.",
+  }),
+  description: z.string().min(10, {
+    message: "Description must be at least 10 characters.",
+  }),
+  price: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+    message: "Price must be a positive number.",
+  }),
+  stock: z.string().refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
+    message: "Stock must be a non-negative number.",
+  }),
+  sku: z.string().min(3, {
+    message: "SKU must be at least 3 characters.",
+  }),
+  categoryId: z.string().min(1, {
+    message: "Please select a category.",
+  }),
+  images: z.array(z.string()).min(1, {
+    message: "Please add at least one image.",
+  }),
+  tags: z.array(z.string()),
 })
 
-type ProductFormValues = z.infer<typeof productSchema>
+type FormData = z.infer<typeof formSchema>
 
 interface ProductFormProps {
   categories: Category[]
-  initialData?: ProductFormValues & { id: string }
+  initialData?: any
 }
 
 export function ProductForm({ categories, initialData }: ProductFormProps) {
   const router = useRouter()
   const { toast } = useToast()
-  const [isLoading, setIsLoading] = React.useState(false)
+  const [isPending, setPending] = React.useState(false)
   const [newTag, setNewTag] = useState("")
 
-  const form = useForm<ProductFormValues>({
-    resolver: zodResolver(productSchema),
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       name: initialData?.name || "",
       description: initialData?.description || "",
-      price: initialData?.price || 0,
-      stock: initialData?.stock || 0,
+      price: initialData?.price?.toString() || "",
+      stock: initialData?.stock?.toString() || "",
+      sku: initialData?.sku || "",
       categoryId: initialData?.categoryId || "",
       images: initialData?.images || [],
-      sku: initialData?.sku || "",
-      tags: initialData?.tags || []
-    }
+      tags: initialData?.tags || [],
+    },
   })
 
   const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -86,40 +100,38 @@ export function ProductForm({ categories, initialData }: ProductFormProps) {
     form.setValue("tags", currentTags.filter(tag => tag !== tagToRemove))
   }
 
-  async function onSubmit(data: ProductFormValues) {
-    try {
-      setIsLoading(true)
+  async function onSubmit(values: FormData) {
+    setPending(true)
 
-      if (initialData) {
-        const response = await fetch(`/api/products/${initialData.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data)
-        })
-        if (!response.ok) throw new Error("Failed to update product")
-      } else {
-        const response = await fetch("/api/products", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data)
-        })
-        if (!response.ok) throw new Error("Failed to create product")
-      }
-      
-      router.refresh()
-      router.push("/dashboard/products")
-      toast({
-        title: `Product ${initialData ? "updated" : "created"} successfully.`,
-        variant: "default"
+    try {
+      const response = await fetch(initialData ? `/api/products/${initialData.id}` : "/api/products", {
+        method: initialData ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...values,
+          price: parseFloat(values.price),
+          stock: parseInt(values.stock),
+        }),
       })
+
+      if (!response.ok) {
+        throw new Error("Failed to save product")
+      }
+
+      toast({
+        title: initialData ? "Product updated" : "Product created",
+        description: "Your changes have been saved.",
+      })
+      router.push("/dashboard/products")
+      router.refresh()
     } catch (error) {
       toast({
-        title: "Something went wrong.",
+        title: "Something went wrong",
         description: "Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
-      setIsLoading(false)
+      setPending(false)
     }
   }
 
@@ -147,34 +159,19 @@ export function ProductForm({ categories, initialData }: ProductFormProps) {
             </FormItem>
           )}
         />
-        <div className="grid gap-4 md:grid-cols-2">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input disabled={isLoading} placeholder="Product name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="sku"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>SKU</FormLabel>
-                <FormControl>
-                  <Input disabled={isLoading} placeholder="SKU" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Name</FormLabel>
+              <FormControl>
+                <Input {...field} disabled={isPending} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name="description"
@@ -182,17 +179,13 @@ export function ProductForm({ categories, initialData }: ProductFormProps) {
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea
-                  disabled={isLoading}
-                  placeholder="Product description"
-                  {...field}
-                />
+                <Textarea {...field} disabled={isPending} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2">
           <FormField
             control={form.control}
             name="price"
@@ -200,12 +193,7 @@ export function ProductForm({ categories, initialData }: ProductFormProps) {
               <FormItem>
                 <FormLabel>Price</FormLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    disabled={isLoading}
-                    placeholder="9.99"
-                    {...field}
-                  />
+                  <Input {...field} type="number" step="0.01" disabled={isPending} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -218,12 +206,22 @@ export function ProductForm({ categories, initialData }: ProductFormProps) {
               <FormItem>
                 <FormLabel>Stock</FormLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    disabled={isLoading}
-                    placeholder="100"
-                    {...field}
-                  />
+                  <Input {...field} type="number" disabled={isPending} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <FormField
+            control={form.control}
+            name="sku"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>SKU</FormLabel>
+                <FormControl>
+                  <Input {...field} disabled={isPending} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -235,28 +233,20 @@ export function ProductForm({ categories, initialData }: ProductFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Category</FormLabel>
-                <Select
-                  disabled={isLoading}
-                  onValueChange={field.onChange}
-                  value={field.value}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue
-                        defaultValue={field.value}
-                        placeholder="Select a category"
-                      />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
+                <FormControl>
+                  <select
+                    {...field}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={isPending}
+                  >
+                    <option value="">Select a category</option>
                     {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
+                      <option key={category.id} value={category.id}>
                         {category.name}
-                      </SelectItem>
+                      </option>
                     ))}
-                  </SelectContent>
-                </Select>
+                  </select>
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -285,7 +275,10 @@ export function ProductForm({ categories, initialData }: ProductFormProps) {
             placeholder="Type a tag and press Enter"
           />
         </div>
-        <Button disabled={isLoading} className="ml-auto" type="submit">
+        <Button type="submit" className="w-full" disabled={isPending}>
+          {isPending && (
+            <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+          )}
           {initialData ? "Update Product" : "Create Product"}
         </Button>
       </form>

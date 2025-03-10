@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
-import { db } from "@/lib/db"
+import { auth } from "@/auth"
+import prismadb from "@/lib/prismadb"
 import { z } from "zod"
 
 const productSchema = z.object({
@@ -28,20 +28,11 @@ export async function PATCH(
     const body = await req.json()
     const validatedData = productSchema.parse(body)
 
-    const product = await db.product.update({
+    const product = await prismadb.product.update({
       where: {
         id: params.productId
       },
-      data: {
-        name: validatedData.name,
-        description: validatedData.description,
-        price: validatedData.price,
-        stock: validatedData.stock,
-        sku: validatedData.sku,
-        categoryId: validatedData.categoryId,
-        images: validatedData.images,
-        tags: validatedData.tags
-      }
+      data: validatedData
     })
 
     return NextResponse.json(product)
@@ -65,7 +56,7 @@ export async function DELETE(
       return new NextResponse("Unauthorized", { status: 401 })
     }
 
-    const product = await db.product.delete({
+    const product = await prismadb.product.delete({
       where: {
         id: params.productId
       }

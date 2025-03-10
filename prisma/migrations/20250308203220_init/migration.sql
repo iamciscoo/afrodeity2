@@ -12,6 +12,8 @@ CREATE TABLE "User" (
     "emailVerified" TIMESTAMP(3),
     "image" TEXT,
     "password" TEXT,
+    "resetToken" TEXT,
+    "resetTokenExpiry" TIMESTAMP(3),
     "role" "Role" NOT NULL DEFAULT 'USER',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -57,6 +59,7 @@ CREATE TABLE "Product" (
     "categoryId" TEXT NOT NULL,
     "stock" INTEGER NOT NULL DEFAULT 0,
     "sku" TEXT NOT NULL,
+    "tags" TEXT[] DEFAULT ARRAY[]::TEXT[],
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -155,6 +158,9 @@ CREATE TABLE "Address" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_resetToken_key" ON "User"("resetToken");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Account_provider_providerAccountId_key" ON "Account"("provider", "providerAccountId");

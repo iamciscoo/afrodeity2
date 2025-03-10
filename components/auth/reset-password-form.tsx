@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -29,8 +29,12 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>
 
-export function ResetPasswordForm() {
-  const searchParams = useSearchParams()
+interface ResetPasswordFormProps {
+  token: string
+}
+
+export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
+  const router = useRouter()
   const [isPending, setPending] = React.useState(false)
 
   const form = useForm<FormData>({
@@ -42,20 +46,12 @@ export function ResetPasswordForm() {
   })
 
   async function onSubmit(values: FormData) {
-    const token = searchParams.get("token")
-
-    if (!token) {
-      toast.error("Missing reset token")
-      return
-    }
-
     setPending(true)
+
     try {
       const response = await fetch("/api/auth/reset-password", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           token,
           password: values.password,
@@ -63,65 +59,60 @@ export function ResetPasswordForm() {
       })
 
       if (!response.ok) {
-        toast.error("Something went wrong. Please try again.")
-        return
+        throw new Error("Something went wrong")
       }
 
-      toast.success("Password reset successful. You can now login with your new password.")
-      form.reset()
+      toast.success("Password reset successfully")
+      router.push("/login")
     } catch (error) {
-      toast.error("Something went wrong. Please try again.")
+      toast.error("Failed to reset password")
     } finally {
       setPending(false)
     }
   }
 
   return (
-    <Form form={form} onSubmit={onSubmit} className="space-y-4">
-      <FormItem className="space-y-1">
-        <FormLabel className="block text-sm font-medium">New Password</FormLabel>
-        <FormControl>
-          <Input
-            type="password"
-            placeholder="Enter your new password"
-            className="w-full"
-            {...form.register("password")}
-          />
-        </FormControl>
-        {form.formState.errors.password && (
-          <FormMessage className="text-sm text-red-500">
-            {form.formState.errors.password.message}
-          </FormMessage>
-        )}
-      </FormItem>
-      <FormItem className="space-y-1">
-        <FormLabel className="block text-sm font-medium">Confirm Password</FormLabel>
-        <FormControl>
-          <Input
-            type="password"
-            placeholder="Confirm your new password"
-            className="w-full"
-            {...form.register("confirmPassword")}
-          />
-        </FormControl>
-        {form.formState.errors.confirmPassword && (
-          <FormMessage className="text-sm text-red-500">
-            {form.formState.errors.confirmPassword.message}
-          </FormMessage>
-        )}
-      </FormItem>
-      <Button
-        type="submit"
-        className="w-full"
-        disabled={isPending}
-        variant="default"
-        size="lg"
-      >
-        {isPending && (
-          <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-        )}
-        Reset Password
-      </Button>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormItem className="space-y-1">
+          <FormLabel className="block text-sm font-medium">New Password</FormLabel>
+          <FormControl>
+            <Input
+              {...form.register("password")}
+              type="password"
+              placeholder="••••••••"
+              className="w-full"
+              disabled={isPending}
+            />
+          </FormControl>
+          <FormMessage className="text-sm text-red-500" />
+        </FormItem>
+        <FormItem className="space-y-1">
+          <FormLabel className="block text-sm font-medium">Confirm Password</FormLabel>
+          <FormControl>
+            <Input
+              {...form.register("confirmPassword")}
+              type="password"
+              placeholder="••••••••"
+              className="w-full"
+              disabled={isPending}
+            />
+          </FormControl>
+          <FormMessage className="text-sm text-red-500" />
+        </FormItem>
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={isPending}
+          variant="default"
+          size="lg"
+        >
+          {isPending && (
+            <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+          )}
+          Reset Password
+        </Button>
+      </form>
     </Form>
   )
 } 

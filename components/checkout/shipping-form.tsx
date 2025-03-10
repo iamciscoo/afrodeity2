@@ -14,74 +14,73 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { Icons } from "@/components/icons"
 
-const shippingSchema = z.object({
-  fullName: z.string().min(2, {
-    message: "Full name must be at least 2 characters.",
-  }),
+const formSchema = z.object({
   email: z.string().email({
     message: "Please enter a valid email address.",
+  }),
+  fullName: z.string().min(2, {
+    message: "Full name must be at least 2 characters.",
   }),
   phone: z.string().min(10, {
     message: "Please enter a valid phone number.",
   }),
   address: z.string().min(5, {
-    message: "Please enter a valid address.",
+    message: "Address must be at least 5 characters.",
   }),
   city: z.string().min(2, {
-    message: "Please enter a valid city.",
+    message: "City must be at least 2 characters.",
   }),
   state: z.string().min(2, {
-    message: "Please enter a valid state.",
+    message: "State must be at least 2 characters.",
   }),
   postalCode: z.string().min(5, {
-    message: "Please enter a valid postal code.",
+    message: "Postal code must be at least 5 characters.",
   }),
   country: z.string().min(2, {
-    message: "Please enter a valid country.",
+    message: "Country must be at least 2 characters.",
   }),
 })
 
-export type ShippingData = z.infer<typeof shippingSchema>
+type FormData = z.infer<typeof formSchema>
 
 interface ShippingFormProps {
-  onSubmit: (data: ShippingData) => void
-  defaultValues?: Partial<ShippingData>
+  onSubmit: (data: FormData) => void
+  defaultValues?: Partial<FormData>
 }
 
 export function ShippingForm({ onSubmit, defaultValues }: ShippingFormProps) {
-  const form = useForm<ShippingData>({
-    resolver: zodResolver(shippingSchema),
-    defaultValues: defaultValues || {
-      fullName: "",
+  const [isPending, setPending] = React.useState(false)
+
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
       email: "",
+      fullName: "",
       phone: "",
       address: "",
       city: "",
       state: "",
       postalCode: "",
       country: "",
+      ...defaultValues,
     },
   })
 
-  return (
-    <Form form={form} onSubmit={onSubmit}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="space-y-4">
-          <FormField
-            control={form.control}
-            name="fullName"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Full Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="John Doe" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+  const handleSubmit = async (data: FormData) => {
+    setPending(true)
+    try {
+      await onSubmit(data)
+    } finally {
+      setPending(false)
+    }
+  }
 
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <div className="space-y-4">
           <FormField
             control={form.control}
             name="email"
@@ -89,13 +88,34 @@ export function ShippingForm({ onSubmit, defaultValues }: ShippingFormProps) {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="john@example.com" {...field} />
+                  <Input
+                    {...field}
+                    type="email"
+                    placeholder="name@example.com"
+                    disabled={isPending}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
+          <FormField
+            control={form.control}
+            name="fullName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Full Name</FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    placeholder="John Doe"
+                    disabled={isPending}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <FormField
             control={form.control}
             name="phone"
@@ -103,13 +123,17 @@ export function ShippingForm({ onSubmit, defaultValues }: ShippingFormProps) {
               <FormItem>
                 <FormLabel>Phone</FormLabel>
                 <FormControl>
-                  <Input type="tel" placeholder="+1 (555) 000-0000" {...field} />
+                  <Input
+                    {...field}
+                    type="tel"
+                    placeholder="(555) 555-5555"
+                    disabled={isPending}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
           <FormField
             control={form.control}
             name="address"
@@ -117,71 +141,93 @@ export function ShippingForm({ onSubmit, defaultValues }: ShippingFormProps) {
               <FormItem>
                 <FormLabel>Address</FormLabel>
                 <FormControl>
-                  <Input placeholder="123 Main St" {...field} />
+                  <Input
+                    {...field}
+                    placeholder="123 Main St"
+                    disabled={isPending}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
-          <FormField
-            control={form.control}
-            name="city"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>City</FormLabel>
-                <FormControl>
-                  <Input placeholder="New York" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="state"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>State</FormLabel>
-                <FormControl>
-                  <Input placeholder="NY" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="postalCode"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Postal Code</FormLabel>
-                <FormControl>
-                  <Input placeholder="10001" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="country"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Country</FormLabel>
-                <FormControl>
-                  <Input placeholder="United States" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="city"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>City</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="New York"
+                      disabled={isPending}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="state"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>State</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="NY"
+                      disabled={isPending}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="postalCode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Postal Code</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="10001"
+                      disabled={isPending}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="country"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Country</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="United States"
+                      disabled={isPending}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
         </div>
-
-        <Button type="submit" className="w-full">
+        <Button type="submit" className="w-full" disabled={isPending}>
+          {isPending && (
+            <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+          )}
           Continue to Payment
         </Button>
       </form>

@@ -3,11 +3,12 @@
 import Image from "next/image"
 import Link from "next/link"
 import { CartItem } from "@/store/use-cart"
+import { formatPrice } from "@/lib/format"
 
 interface OrderSummaryProps {
   items: CartItem[]
   total: number
-  step: "shipping" | "payment"
+  step?: "shipping" | "payment"
 }
 
 export function OrderSummary({ items, total, step }: OrderSummaryProps) {
@@ -45,7 +46,7 @@ export function OrderSummary({ items, total, step }: OrderSummaryProps) {
                   Qty: {item.quantity}
                 </p>
                 <p className="mt-auto text-sm font-medium">
-                  ${Number(item.product.price).toFixed(2)}
+                  {formatPrice(Number(item.product.price) * item.quantity)}
                 </p>
               </div>
             </div>
@@ -56,24 +57,24 @@ export function OrderSummary({ items, total, step }: OrderSummaryProps) {
         <div className="mt-6 space-y-4">
           <div className="flex justify-between text-sm">
             <span>Subtotal</span>
-            <span>${total.toFixed(2)}</span>
+            <span>{formatPrice(total)}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span>Shipping</span>
             {shippingCost === 0 ? (
               <span className="text-green-600">Free</span>
             ) : (
-              <span>${shippingCost.toFixed(2)}</span>
+              <span>{formatPrice(shippingCost)}</span>
             )}
           </div>
           <div className="border-t pt-4">
             <div className="flex justify-between font-medium">
               <span>Total</span>
-              <span>${finalTotal.toFixed(2)}</span>
+              <span>{formatPrice(finalTotal)}</span>
             </div>
             {total < 150 && (
               <p className="mt-2 text-sm text-muted-foreground">
-                Add ${(150 - total).toFixed(2)} more to get free shipping
+                Add {formatPrice(150 - total)} more to get free shipping
               </p>
             )}
           </div>

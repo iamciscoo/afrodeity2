@@ -12,7 +12,7 @@ import {
 interface RecentOrdersProps {
   orders: (Order & {
     user: User
-    items: (OrderItem & {
+    orderItems: (OrderItem & {
       product: Product
     })[]
   })[]
@@ -33,7 +33,7 @@ export function RecentOrders({ orders }: RecentOrdersProps) {
                   {order.user.name || order.user.email}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {order.items.length} item{order.items.length === 1 ? "" : "s"}
+                  {order.orderItems.length} item{order.orderItems.length === 1 ? "" : "s"}
                 </p>
               </div>
               <div className="ml-auto font-medium">

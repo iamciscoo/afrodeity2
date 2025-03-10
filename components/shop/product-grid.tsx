@@ -3,7 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
-import { formatPrice } from "@/lib/utils"
+import { formatPrice } from "@/lib/format"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ShoppingCart } from "lucide-react"

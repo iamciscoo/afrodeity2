@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
-import { db } from "@/lib/db"
+import { auth } from "@/auth"
+import prismadb from "@/lib/prismadb"
 import { z } from "zod"
+import { Prisma } from "@prisma/client"
 
 const productSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -25,17 +26,8 @@ export async function POST(req: Request) {
     const body = await req.json()
     const validatedData = productSchema.parse(body)
 
-    const product = await db.product.create({
-      data: {
-        name: validatedData.name,
-        description: validatedData.description,
-        price: validatedData.price,
-        stock: validatedData.stock,
-        sku: validatedData.sku,
-        categoryId: validatedData.categoryId,
-        images: validatedData.images,
-        tags: validatedData.tags
-      }
+    const product = await prismadb.product.create({
+      data: validatedData
     })
 
     return NextResponse.json(product)
@@ -63,33 +55,33 @@ export async function GET(req: Request) {
 
     const skip = (page - 1) * limit
 
-    const where = {
+    const where: Prisma.ProductWhereInput = {
       AND: [
-        {
+        search ? {
           OR: [
-            { name: { contains: search, mode: "insensitive" } },
-            { description: { contains: search, mode: "insensitive" } }
+            { name: { contains: search, mode: "insensitive" as Prisma.QueryMode } },
+            { description: { contains: search, mode: "insensitive" as Prisma.QueryMode } }
           ]
-        },
-        { categoryId: category },
+        } : {},
+        category ? { categoryId: category } : {},
         { price: { gte: minPrice, lte: maxPrice } },
         tags.length > 0 ? { tags: { hasEvery: tags } } : {}
       ].filter(Boolean)
     }
 
     const [products, total] = await Promise.all([
-      db.product.findMany({
+      prismadb.product.findMany({
         where,
         include: {
           category: true
         },
         orderBy: {
-          [sortField]: sortOrder.toLowerCase()
+          [sortField]: sortOrder.toLowerCase() as Prisma.SortOrder
         },
         skip,
         take: limit
       }),
-      db.product.count({ where })
+      prismadb.product.count({ where })
     ])
 
     return NextResponse.json({

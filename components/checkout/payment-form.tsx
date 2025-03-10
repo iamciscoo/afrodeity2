@@ -1,158 +1,110 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import * as React from "react"
 import { useRouter } from "next/navigation"
-import { useCart } from "@/store/use-cart"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
-import { ShippingData } from "./shipping-form"
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js"
 import { getStripe } from "@/lib/stripe"
 
+const formSchema = z.object({
+  email: z.string().email({
+    message: "Please enter a valid email address.",
+  }),
+  fullName: z.string().min(2, {
+    message: "Full name must be at least 2 characters.",
+  }),
+  phone: z.string().min(10, {
+    message: "Please enter a valid phone number.",
+  }),
+  address: z.string().min(5, {
+    message: "Address must be at least 5 characters.",
+  }),
+  city: z.string().min(2, {
+    message: "City must be at least 2 characters.",
+  }),
+  state: z.string().min(2, {
+    message: "State must be at least 2 characters.",
+  }),
+  postalCode: z.string().min(5, {
+    message: "Postal code must be at least 5 characters.",
+  }),
+  country: z.string().min(2, {
+    message: "Country must be at least 2 characters.",
+  }),
+})
+
+type FormData = z.infer<typeof formSchema>
+
 interface PaymentFormProps {
-  shippingData: ShippingData
-  onBack: () => void
+  clientSecret: string
+  shippingData: FormData
 }
 
-function PaymentForm({ shippingData, onBack }: PaymentFormProps) {
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
-  const { items, total, clearCart } = useCart()
+function PaymentForm({ clientSecret, shippingData }: PaymentFormProps) {
   const stripe = useStripe()
   const elements = useElements()
+  const router = useRouter()
+  const [isPending, setPending] = React.useState(false)
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+
     if (!stripe || !elements) {
       return
     }
 
-    setIsLoading(true)
+    setPending(true)
 
     try {
-      // Create payment intent and order
-      const response = await fetch("/api/stripe", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          items: items.map(item => ({
-            productId: item.productId,
-            quantity: item.quantity,
-            price: item.product.price,
-          })),
-          shippingAddress: shippingData,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to create order")
-      }
-
-      const { clientSecret, orderId } = await response.json()
-
-      // Confirm payment with Stripe
       const { error } = await stripe.confirmPayment({
         elements,
         confirmParams: {
-          return_url: `${window.location.origin}/checkout/success?orderId=${orderId}`,
+          return_url: `${window.location.origin}/checkout/success`,
+          payment_method_data: {
+            billing_details: {
+              name: shippingData.fullName,
+              email: shippingData.email,
+              phone: shippingData.phone,
+              address: {
+                line1: shippingData.address,
+                city: shippingData.city,
+                state: shippingData.state,
+                postal_code: shippingData.postalCode,
+                country: shippingData.country,
+              },
+            },
+          },
         },
       })
 
       if (error) {
-        throw error
+        throw new Error(error.message)
       }
-
-      // Payment successful - clear cart and redirect will happen automatically
-      clearCart()
     } catch (error) {
-      console.error("Checkout error:", error)
-      toast.error("Something went wrong. Please try again.")
+      toast.error("Payment failed. Please try again.")
     } finally {
-      setIsLoading(false)
+      setPending(false)
     }
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold">Payment Method</h2>
-        <p className="text-sm text-muted-foreground">
-          All transactions are secure and encrypted.
-        </p>
-      </div>
-
-      <form onSubmit={onSubmit} className="space-y-4">
-        <PaymentElement />
-
-        <div className="flex gap-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onBack}
-            disabled={isLoading}
-          >
-            Back
-          </Button>
-          <Button
-            type="submit"
-            className="flex-1"
-            disabled={isLoading || !stripe || !elements}
-          >
-            {isLoading ? "Processing..." : `Pay $${total.toFixed(2)}`}
-          </Button>
-        </div>
-      </form>
-    </div>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <PaymentElement />
+      <Button type="submit" className="w-full" disabled={!stripe || isPending}>
+        {isPending ? "Processing..." : "Pay Now"}
+      </Button>
+    </form>
   )
 }
 
-// Wrapper component to provide Stripe context
-export function StripePaymentForm(props: PaymentFormProps) {
-  const [clientSecret, setClientSecret] = useState<string>()
-  const { items } = useCart()
-
-  // Initialize payment intent when component mounts
-  useEffect(() => {
-    fetch("/api/stripe", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        items: items.map(item => ({
-          productId: item.productId,
-          quantity: item.quantity,
-          price: item.product.price,
-        })),
-        shippingAddress: props.shippingData,
-      }),
-    })
-      .then((res) => res.json())
-      .then((data) => setClientSecret(data.clientSecret))
-      .catch((error) => {
-        console.error("Failed to initialize payment:", error)
-        toast.error("Failed to initialize payment. Please try again.")
-      })
-  }, [items, props.shippingData])
-
-  if (!clientSecret) {
-    return <div>Loading payment form...</div>
-  }
-
+export function PaymentFormWrapper({ clientSecret, shippingData }: PaymentFormProps) {
   return (
-    <Elements
-      stripe={getStripe()}
-      options={{
-        clientSecret,
-        appearance: {
-          theme: "stripe",
-        },
-      }}
-    >
-      <PaymentForm {...props} />
+    <Elements stripe={getStripe()} options={{ clientSecret }}>
+      <PaymentForm clientSecret={clientSecret} shippingData={shippingData} />
     </Elements>
   )
 } 

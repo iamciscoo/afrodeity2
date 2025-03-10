@@ -19,7 +19,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { MoreHorizontal } from "lucide-react"
-import { formatDate } from "@/lib/utils"
+import { formatDate } from "@/lib/format"
 import { toast } from "sonner"
 
 interface UsersTableProps {

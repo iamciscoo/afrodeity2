@@ -43,7 +43,7 @@ export default async function DashboardPage() {
       },
       include: {
         user: true,
-        items: {
+        orderItems: {
           include: {
             product: true,
           },
@@ -64,7 +64,7 @@ export default async function DashboardPage() {
   const metrics = {
     totalOrders,
     totalCustomers,
-    totalRevenue: totalRevenue._sum.total || 0,
+    totalRevenue: Number(totalRevenue._sum.total || 0),
     lowStockProducts,
   }
 

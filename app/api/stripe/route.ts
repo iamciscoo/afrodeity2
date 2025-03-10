@@ -39,25 +39,27 @@ export async function POST(req: Request) {
       },
     });
 
-    // Create order in database
+    // First create the shipping address
+    const address = await prisma.address.create({
+      data: {
+        userId: session.user.id,
+        street: shippingAddress.address,
+        city: shippingAddress.city,
+        state: shippingAddress.state,
+        postalCode: shippingAddress.postalCode,
+        country: shippingAddress.country,
+      },
+    });
+
+    // Then create the order with the address
     const order = await prisma.order.create({
       data: {
         userId: session.user.id,
         status: "PENDING",
         total: total,
-        shippingAddress: {
-          create: {
-            fullName: shippingAddress.fullName,
-            email: shippingAddress.email,
-            phone: shippingAddress.phone,
-            address: shippingAddress.address,
-            city: shippingAddress.city,
-            state: shippingAddress.state,
-            postalCode: shippingAddress.postalCode,
-            country: shippingAddress.country,
-          },
-        },
-        items: {
+        addressId: address.id,
+        paymentIntent: paymentIntent.id,
+        orderItems: {
           create: items.map((item: { productId: string; quantity: number; price: number }) => ({
             productId: item.productId,
             quantity: item.quantity,
@@ -66,8 +68,8 @@ export async function POST(req: Request) {
         },
       },
       include: {
-        items: true,
-        shippingAddress: true,
+        orderItems: true,
+        address: true,
       },
     });
 

@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { MoreHorizontal } from "lucide-react"
-import { formatDate } from "@/lib/utils"
+import { formatDate } from "@/lib/format"
 
 interface OrdersTableProps {
   orders: (Order & {

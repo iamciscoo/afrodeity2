@@ -25,7 +25,7 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>
 
 export function ForgotPasswordForm() {
-  const [isPending, setPending] = React.useState(false)
+  const [isLoading, setIsLoading] = React.useState(false)
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -35,60 +35,49 @@ export function ForgotPasswordForm() {
   })
 
   async function onSubmit(values: FormData) {
-    setPending(true)
+    setIsLoading(true)
+
     try {
       const response = await fetch("/api/auth/forgot-password", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       })
 
       if (!response.ok) {
-        toast.error("Something went wrong. Please try again.")
-        return
+        throw new Error("Something went wrong")
       }
 
-      toast.success("Password reset email sent. Please check your inbox.")
-      form.reset()
+      toast.success("Password reset email sent")
     } catch (error) {
-      toast.error("Something went wrong. Please try again.")
+      toast.error("Failed to send reset email")
     } finally {
-      setPending(false)
+      setIsLoading(false)
     }
   }
 
   return (
-    <Form form={form} onSubmit={onSubmit} className="space-y-4">
-      <FormItem className="space-y-1">
-        <FormLabel className="block text-sm font-medium">Email</FormLabel>
-        <FormControl>
-          <Input
-            type="email"
-            placeholder="name@example.com"
-            className="w-full"
-            {...form.register("email")}
-          />
-        </FormControl>
-        {form.formState.errors.email && (
-          <FormMessage className="text-sm text-red-500">
-            {form.formState.errors.email.message}
-          </FormMessage>
-        )}
-      </FormItem>
-      <Button
-        type="submit"
-        className="w-full"
-        disabled={isPending}
-        variant="default"
-        size="lg"
-      >
-        {isPending && (
-          <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-        )}
-        Send Reset Link
-      </Button>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormItem className="space-y-1">
+          <FormLabel className="block text-sm font-medium">Email</FormLabel>
+          <FormControl>
+            <Input
+              {...form.register("email")}
+              type="email"
+              placeholder="Enter your email"
+              disabled={isLoading}
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading && (
+            <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+          )}
+          Send Reset Link
+        </Button>
+      </form>
     </Form>
   )
 } 

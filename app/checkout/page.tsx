@@ -1,51 +1,82 @@
 "use client"
 
-import { useState } from "react"
+import * as React from "react"
+import { useRouter } from "next/navigation"
 import { useCart } from "@/store/use-cart"
 import { ShippingForm } from "@/components/checkout/shipping-form"
-import { StripePaymentForm } from "@/components/checkout/payment-form"
+import { PaymentFormWrapper } from "@/components/checkout/payment-form"
 import { OrderSummary } from "@/components/checkout/order-summary"
 
 type CheckoutStep = "shipping" | "payment"
 
 export default function CheckoutPage() {
-  const [step, setStep] = useState<CheckoutStep>("shipping")
-  const [shippingData, setShippingData] = useState<any>(null)
+  const router = useRouter()
   const { items, total } = useCart()
+  const [step, setStep] = React.useState<CheckoutStep>("shipping")
+  const [shippingData, setShippingData] = React.useState<any>(null)
+  const [clientSecret, setClientSecret] = React.useState<string | null>(null)
 
-  // Handle shipping form submission
-  const handleShippingSubmit = (data: any) => {
-    setShippingData(data)
-    setStep("payment")
-  }
+  React.useEffect(() => {
+    if (items.length === 0) {
+      router.push("/cart")
+    }
+  }, [items, router])
 
-  // Handle back button click in payment step
-  const handleBackToShipping = () => {
-    setStep("shipping")
+  const handleShippingSubmit = async (data: any) => {
+    try {
+      const response = await fetch("/api/stripe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: items.map(item => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            price: item.product.price,
+          })),
+          shippingAddress: data,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to create payment intent")
+      }
+
+      const { clientSecret } = await response.json()
+      setClientSecret(clientSecret)
+      setShippingData(data)
+      setStep("payment")
+    } catch (error) {
+      console.error("Error:", error)
+    }
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div className="py-16">
-        <h1 className="text-3xl font-bold tracking-tight">Checkout</h1>
-
-        <div className="mt-12 lg:grid lg:grid-cols-12 lg:items-start lg:gap-x-12 xl:gap-x-16">
-          {/* Form Section */}
-          <div className="lg:col-span-7">
+    <div className="container mx-auto px-4 py-8">
+      <div className="grid gap-8 lg:grid-cols-2">
+        <div>
+          <div className="rounded-lg border p-6">
             {step === "shipping" ? (
-              <ShippingForm onSubmit={handleShippingSubmit} />
+              <>
+                <h2 className="mb-4 text-2xl font-semibold">Shipping Information</h2>
+                <ShippingForm onSubmit={handleShippingSubmit} />
+              </>
             ) : (
-              <StripePaymentForm
-                shippingData={shippingData}
-                onBack={handleBackToShipping}
-              />
+              <>
+                <h2 className="mb-4 text-2xl font-semibold">Payment Information</h2>
+                {clientSecret && shippingData ? (
+                  <PaymentFormWrapper
+                    clientSecret={clientSecret}
+                    shippingData={shippingData}
+                  />
+                ) : (
+                  <div>Loading payment form...</div>
+                )}
+              </>
             )}
           </div>
-
-          {/* Order Summary Section */}
-          <div className="mt-10 lg:col-span-5 lg:mt-0">
-            <OrderSummary items={items} total={total} step={step} />
-          </div>
+        </div>
+        <div>
+          <OrderSummary items={items} total={total} />
         </div>
       </div>
     </div>

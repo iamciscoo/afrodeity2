@@ -1,10 +1,14 @@
-import { db } from "@/lib/db"
+import { Suspense } from "react"
+import prismadb from "@/lib/prismadb"
 import { ProductGrid } from "@/components/shop/product-grid"
 import { ProductFilters } from "@/components/shop/product-filters"
+import { Loading } from "@/components/loading"
+import { Prisma, Product, Category } from "@prisma/client"
 
 interface ShopPageProps {
   searchParams: {
     page?: string
+    limit?: string
     search?: string
     category?: string
     sort?: string
@@ -14,9 +18,13 @@ interface ShopPageProps {
   }
 }
 
+type ProductWithCategory = Product & {
+  category: Category
+}
+
 export default async function ShopPage({ searchParams }: ShopPageProps) {
   const page = parseInt(searchParams.page || "1")
-  const limit = 12
+  const limit = parseInt(searchParams.limit || "12")
   const search = searchParams.search || ""
   const category = searchParams.category || undefined
   const sort = searchParams.sort || "createdAt.desc"
@@ -27,64 +35,69 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
 
   const skip = (page - 1) * limit
 
-  const where = {
-    AND: [
-      {
-        OR: [
-          { name: { contains: search, mode: "insensitive" } },
-          { description: { contains: search, mode: "insensitive" } }
-        ]
-      },
-      { categoryId: category },
-      { price: { gte: minPrice, lte: maxPrice } },
-      tags.length > 0 ? { tags: { hasEvery: tags } } : {}
-    ].filter(Boolean)
+  const where: Prisma.ProductWhereInput = {
+    ...(search ? {
+      OR: [
+        { name: { contains: search, mode: "insensitive" } },
+        { description: { contains: search, mode: "insensitive" } }
+      ]
+    } : {}),
+    ...(category ? { categoryId: category } : {}),
+    price: { gte: minPrice, lte: maxPrice },
+    ...(tags.length > 0 ? { tags: { hasSome: tags } } : {})
   }
 
   const [products, categories, total] = await Promise.all([
-    db.product.findMany({
+    prismadb.product.findMany({
       where,
       include: {
         category: true
       },
       orderBy: {
-        [sortField]: sortOrder.toLowerCase()
+        [sortField]: sortOrder.toLowerCase() as Prisma.SortOrder
       },
       skip,
       take: limit
     }),
-    db.category.findMany(),
-    db.product.count({ where })
+    prismadb.category.findMany(),
+    prismadb.product.count({ where })
   ])
 
   // Get all unique tags from products
-  const allTags = await db.product.findMany({
-    select: {
-      tags: true
-    }
-  })
-  const uniqueTags = Array.from(new Set(allTags.flatMap(p => p.tags)))
+  const allProducts = await prismadb.product.findMany()
+  const uniqueTags = Array.from(
+    new Set(allProducts.flatMap(product => product.tags))
+  ).sort()
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-8">
-      <div className="lg:grid lg:grid-cols-5 lg:gap-x-8">
-        <div className="hidden lg:block">
-          <ProductFilters
-            categories={categories}
-            searchParams={searchParams}
-            minPrice={0}
-            maxPrice={999999}
-            tags={uniqueTags}
-          />
-        </div>
-        <div className="lg:col-span-4">
-          <ProductGrid
-            products={products}
-            currentPage={page}
-            totalPages={Math.ceil(total / limit)}
-          />
-        </div>
-      </div>
+    <div className="flex flex-col space-y-8 p-8">
+      <Suspense fallback={<Loading />}>
+        <ProductFilters
+          categories={categories}
+          tags={uniqueTags}
+          searchParams={searchParams}
+          minPrice={minPrice}
+          maxPrice={maxPrice}
+        />
+      </Suspense>
+      <Suspense fallback={<Loading />}>
+        <ProductGrid
+          products={products.map((product: ProductWithCategory) => ({
+            id: product.id,
+            name: product.name,
+            description: product.description,
+            price: Number(product.price),
+            images: product.images,
+            tags: product.tags,
+            category: {
+              id: product.category.id,
+              name: product.category.name,
+            }
+          }))}
+          currentPage={page}
+          totalPages={Math.ceil(total / limit)}
+        />
+      </Suspense>
     </div>
   )
 } 
