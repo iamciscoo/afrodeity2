@@ -18,12 +18,15 @@ async function getPasswordHash(password: string): Promise<string> {
   return Buffer.from(hash).toString('hex');
 }
 
-if (!process.env.NEXTAUTH_SECRET) {
-  throw new Error('NEXTAUTH_SECRET is not set')
+// Ensure NEXTAUTH_SECRET is set
+const authSecret = process.env.NEXTAUTH_SECRET
+if (!authSecret && process.env.NODE_ENV === 'production') {
+  throw new Error('NEXTAUTH_SECRET is not set in production')
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
+  secret: authSecret,
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",
